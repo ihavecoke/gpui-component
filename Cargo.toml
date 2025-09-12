@@ -15,14 +15,14 @@ default-members = ["crates/story"]
 resolver = "2"
 
 [workspace.dependencies]
-gpui = { git = "https://github.com/zed-industries/zed.git", rev = "b4d4294bee6840e09814e399fb78dd7201c9247a" }
+gpui = { git = "https://github.com/zed-industries/zed.git", rev = "9ca4fb16b243328ff7fcea2e14e4f0f870413df7" }
 gpui-component = { path = "crates/ui" }
 gpui-component-macros = { path = "crates/macros" }
-gpui_macros = { git = "https://github.com/zed-industries/zed.git", rev = "b4d4294bee6840e09814e399fb78dd7201c9247a" }
-reqwest_client = { git = "https://github.com/zed-industries/zed.git" }
-rope = { git = "https://github.com/zed-industries/zed.git", rev = "b4d4294bee6840e09814e399fb78dd7201c9247a" }
+gpui_macros = { git = "https://github.com/zed-industries/zed.git", rev = "9ca4fb16b243328ff7fcea2e14e4f0f870413df7" }
+reqwest_client = { git = "https://github.com/zed-industries/zed.git", rev = "9ca4fb16b243328ff7fcea2e14e4f0f870413df7" }
+rope = { git = "https://github.com/zed-industries/zed.git", rev = "9ca4fb16b243328ff7fcea2e14e4f0f870413df7" }
 story = { path = "crates/story" }
-sum_tree = { git = "https://github.com/zed-industries/zed.git", rev = "b4d4294bee6840e09814e399fb78dd7201c9247a" }
+sum_tree = { git = "https://github.com/zed-industries/zed.git", rev = "9ca4fb16b243328ff7fcea2e14e4f0f870413df7" }
 wef = { path = "crates/wef" }
 
 anyhow = "1"
