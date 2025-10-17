@@ -676,6 +676,7 @@ impl StoryState {
             "TooltipStory" => story!(TooltipStory),
             "WebViewStory" => story!(WebViewStory),
             "AccordionStory" => story!(AccordionStory),
+            "AlertStory" => story!(AlertStory),
             "SidebarStory" => story!(SidebarStory),
             "FormStory" => story!(FormStory),
             "NotificationStory" => story!(NotificationStory),

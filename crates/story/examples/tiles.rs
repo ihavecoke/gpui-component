@@ -1,16 +1,16 @@
 use anyhow::{Context as _, Result};
 use gpui::*;
 use gpui_component::{
+    ActiveTheme, Root, Sizable, TitleBar,
     dock::{
-        register_panel, DockArea, DockAreaState, DockEvent, DockItem, Panel, PanelEvent, PanelInfo,
-        PanelRegistry, PanelState, PanelView,
+        DockArea, DockAreaState, DockEvent, DockItem, Panel, PanelEvent, PanelInfo, PanelRegistry,
+        PanelState, PanelView, register_panel,
     },
     input::{InputState, TextInput},
-    ActiveTheme, Root, Sizable, TitleBar,
 };
 use serde::{Deserialize, Serialize};
 use std::{sync::Arc, time::Duration};
-use story::{Assets, ButtonStory, IconStory, StoryContainer};
+use story::{AlertStory, Assets, ButtonStory, FormStory, IconStory, LabelStory, StoryContainer};
 
 actions!(tiles_story, [Quit]);
 
@@ -323,10 +323,43 @@ impl StoryTiles {
                     window,
                     cx,
                 ),
+                DockItem::tab(
+                    ContainerPanel::new(
+                        Arc::new(StoryContainer::panel::<FormStory>(window, cx)),
+                        window,
+                        cx,
+                    ),
+                    dock_area,
+                    window,
+                    cx,
+                ),
+                DockItem::tab(
+                    ContainerPanel::new(
+                        Arc::new(StoryContainer::panel::<AlertStory>(window, cx)),
+                        window,
+                        cx,
+                    ),
+                    dock_area,
+                    window,
+                    cx,
+                ),
+                DockItem::tab(
+                    ContainerPanel::new(
+                        Arc::new(StoryContainer::panel::<LabelStory>(window, cx)),
+                        window,
+                        cx,
+                    ),
+                    dock_area,
+                    window,
+                    cx,
+                ),
             ],
             vec![
-                Bounds::new(point(px(10.), px(10.)), size(px(610.), px(190.))),
-                Bounds::new(point(px(120.), px(10.)), size(px(650.), px(300.))),
+                Bounds::new(point(px(50.), px(50.)), size(px(400.), px(250.))),
+                Bounds::new(point(px(465.), px(70.)), size(px(350.), px(280.))),
+                Bounds::new(point(px(80.), px(312.)), size(px(420.), px(200.))),
+                Bounds::new(point(px(515.), px(530.)), size(px(300.), px(220.))),
+                Bounds::new(point(px(950.), px(150.)), size(px(380.), px(300.))),
             ],
             dock_area,
             window,
