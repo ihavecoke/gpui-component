@@ -249,11 +249,13 @@ impl Tiles {
             return;
         };
 
-        let Some(item) = self.panels.get_mut(index) else {
-            return;
+        let (previous_bounds, item_size) = {
+            let Some(item) = self.panels.get(index) else {
+                return;
+            };
+            (item.bounds, item.bounds.size)
         };
 
-        let previous_bounds = item.bounds;
         let adjusted_position = mouse_position - self.bounds.origin;
         let delta = adjusted_position - self.dragging_initial_mouse;
         let mut new_origin = self.dragging_initial_bounds.origin + delta;
@@ -267,10 +269,16 @@ impl Tiles {
             new_origin.x = min_left;
         }
 
-        let final_origin = round_point_to_nearest_ten(new_origin, cx);
+        // Apply magnetic snap to nearby panel edges
+        let snapped_origin =
+            self.apply_magnetic_snap(index, new_origin, item_size, cx.theme().tile_grid_size);
+
         // Only push to history if bounds have changed
-        if final_origin != previous_bounds.origin {
-            item.bounds.origin = final_origin;
+        if snapped_origin != previous_bounds.origin {
+            let Some(item) = self.panels.get_mut(index) else {
+                return;
+            };
+            item.bounds.origin = snapped_origin;
 
             // Only push if not during history operations
             if !self.history.ignore {
@@ -424,6 +432,86 @@ impl Tiles {
     fn reset_current_index(&mut self) {
         self.dragging_index = None;
         self.resizing_index = None;
+    }
+
+    /// Apply magnetic snap effect when dragging panel is near other panels' edges
+    /// Returns the snapped position if within snap threshold, otherwise returns original position
+    ///
+    /// Optimization: Only checks panels within snap range using spatial filtering
+    fn apply_magnetic_snap(
+        &self,
+        dragging_index: usize,
+        origin: Point<Pixels>,
+        size: Size<Pixels>,
+        snap_threshold: Pixels,
+    ) -> Point<Pixels> {
+        let mut best_x: Option<(Pixels, Pixels)> = None; // (distance, position)
+        let mut best_y: Option<(Pixels, Pixels)> = None;
+
+        // Current panel edges
+        let left = origin.x;
+        let right = origin.x + size.width;
+        let top = origin.y;
+        let bottom = origin.y + size.height;
+
+        // Helper macro to update best snap candidate
+        macro_rules! try_snap {
+            ($current:expr, $target:expr, $position:expr, $best:expr) => {
+                let dist = ($current - $target).abs();
+                if dist < snap_threshold {
+                    if let Some((best_dist, _)) = $best {
+                        if dist < best_dist {
+                            $best = Some((dist, $position));
+                        }
+                    } else {
+                        $best = Some((dist, $position));
+                    }
+                }
+            };
+        }
+
+        // Only check panels that could possibly be within snap range
+        for (i, other) in self.panels.iter().enumerate() {
+            if i == dragging_index {
+                continue;
+            }
+
+            let other_left = other.bounds.origin.x;
+            let other_right = other.bounds.origin.x + other.bounds.size.width;
+            let other_top = other.bounds.origin.y;
+            let other_bottom = other.bounds.origin.y + other.bounds.size.height;
+
+            // Spatial filtering: skip if panels are too far apart
+            // Check if panels could possibly snap (with extra margin)
+            let margin = snap_threshold * 2.0;
+            let x_overlap = right + margin >= other_left && left <= other_right + margin;
+            let y_overlap = bottom + margin >= other_top && top <= other_bottom + margin;
+
+            if !x_overlap && !y_overlap {
+                continue; // Too far, skip this panel
+            }
+
+            // Horizontal snapping (only if vertically overlapping or close)
+            if y_overlap {
+                try_snap!(left, other_left, other_left, best_x); // left to left
+                try_snap!(left, other_right, other_right, best_x); // left to right
+                try_snap!(right, other_left, other_left - size.width, best_x); // right to left
+                try_snap!(right, other_right, other_right - size.width, best_x); // right to right
+            }
+
+            // Vertical snapping (only if horizontally overlapping or close)
+            if x_overlap {
+                try_snap!(top, other_top, other_top, best_y); // top to top
+                try_snap!(top, other_bottom, other_bottom, best_y); // top to bottom
+                try_snap!(bottom, other_top, other_top - size.height, best_y); // bottom to top
+                try_snap!(bottom, other_bottom, other_bottom - size.height, best_y); // bottom to bottom
+            }
+        }
+
+        Point::new(
+            best_x.map(|(_, pos)| pos).unwrap_or(origin.x),
+            best_y.map(|(_, pos)| pos).unwrap_or(origin.y),
+        )
     }
 
     /// Bring the panel of target_index to front, returns (old_index, new_index) if successful
@@ -1053,14 +1141,6 @@ impl Tiles {
 #[inline]
 fn round_to_nearest_ten(value: Pixels, cx: &App) -> Pixels {
     (value / cx.theme().tile_grid_size).round() * cx.theme().tile_grid_size
-}
-
-#[inline]
-fn round_point_to_nearest_ten(point: Point<Pixels>, cx: &App) -> Point<Pixels> {
-    Point::new(
-        round_to_nearest_ten(point.x, cx),
-        round_to_nearest_ten(point.y, cx),
-    )
 }
 
 impl Focusable for Tiles {
