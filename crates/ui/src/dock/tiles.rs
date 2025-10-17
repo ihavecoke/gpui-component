@@ -436,8 +436,6 @@ impl Tiles {
 
     /// Apply magnetic snap effect when dragging panel is near other panels' edges
     /// Returns the snapped position if within snap threshold, otherwise returns original position
-    ///
-    /// Optimization: Only checks panels within snap range using spatial filtering
     fn apply_magnetic_snap(
         &self,
         dragging_index: usize,
@@ -496,7 +494,8 @@ impl Tiles {
                 try_snap!(left, other_left, other_left, best_x); // left to left
                 try_snap!(left, other_right, other_right, best_x); // left to right
                 try_snap!(right, other_left, other_left - size.width, best_x); // right to left
-                try_snap!(right, other_right, other_right - size.width, best_x); // right to right
+                try_snap!(right, other_right, other_right - size.width, best_x);
+                // right to right
             }
 
             // Vertical snapping (only if horizontally overlapping or close)
@@ -504,7 +503,8 @@ impl Tiles {
                 try_snap!(top, other_top, other_top, best_y); // top to top
                 try_snap!(top, other_bottom, other_bottom, best_y); // top to bottom
                 try_snap!(bottom, other_top, other_top - size.height, best_y); // bottom to top
-                try_snap!(bottom, other_bottom, other_bottom - size.height, best_y); // bottom to bottom
+                try_snap!(bottom, other_bottom, other_bottom - size.height, best_y);
+                // bottom to bottom
             }
         }
 
