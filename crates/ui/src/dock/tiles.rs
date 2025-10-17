@@ -258,27 +258,32 @@ impl Tiles {
 
         let adjusted_position = mouse_position - self.bounds.origin;
         let delta = adjusted_position - self.dragging_initial_mouse;
-        let mut new_origin = self.dragging_initial_bounds.origin + delta;
+        let new_origin = self.dragging_initial_bounds.origin + delta;
 
-        // Avoid out of bounds
-        if new_origin.y < px(0.) {
-            new_origin.y = px(0.);
-        }
-        let min_left = -self.dragging_initial_bounds.size.width + px(64.);
-        if new_origin.x < min_left {
-            new_origin.x = min_left;
-        }
-
-        // Apply magnetic snap to nearby panel edges
+        // Apply magnetic snap FIRST (without bounds clamping)
         let snapped_origin =
             self.apply_magnetic_snap(index, new_origin, item_size, cx.theme().tile_grid_size);
 
+        // THEN apply bounds clamping to the final position
+        let mut final_origin = snapped_origin;
+
+        // Clamp Y to minimum 0
+        if final_origin.y < px(0.) {
+            final_origin.y = px(0.);
+        }
+
+        // Clamp X to allow panel to be mostly off-screen but keep 64px visible
+        let min_left = -item_size.width + px(64.);
+        if final_origin.x < min_left {
+            final_origin.x = min_left;
+        }
+
         // Only push to history if bounds have changed
-        if snapped_origin != previous_bounds.origin {
+        if final_origin != previous_bounds.origin {
             let Some(item) = self.panels.get_mut(index) else {
                 return;
             };
-            item.bounds.origin = snapped_origin;
+            item.bounds.origin = final_origin;
 
             // Only push if not during history operations
             if !self.history.ignore {
